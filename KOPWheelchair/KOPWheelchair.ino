@@ -1,10 +1,9 @@
-#include "MatrixPS2Controller.h"
-#include <Servo.h>
+#include <PS2X_lib.h>
 #include "Utility.h"
 #include "KOPWheelchair.h"
 #include "Motor.h"
 
-MatrixPS2Controller PS2;
+PS2X PS2;
 
 Motor Left1; // must construct in setup
 Motor Left2;
@@ -18,24 +17,32 @@ void setup()
 {
 	pinMode(7, INPUT);
 	Serial.begin(115200);
-	PS2 = MatrixPS2Controller();
-	PS2.begin();
 
-	Left1 = Motor(TIMER2_PIN3, false, COMMON_SPEED_MULTIPLER);
-	Left2 = Motor(TIMER1_PIN9, true, COMMON_SPEED_MULTIPLER);
-	Right1 = Motor(TIMER1_PIN10, false, COMMON_SPEED_MULTIPLER);
-	Right2 = Motor(TIMER2_PIN11, true, COMMON_SPEED_MULTIPLER);
+	auto error = PS2.config_gamepad(13, 11, 10, 12, true, true);
+	if (error != 0)
+	{
+		LogSerial("PS2 error %d, refusing to initialize", error);
+		delay(~0);
+	}
+
+	Left1 = Motor(3, false, COMMON_SPEED_MULTIPLER);
+	Left2 = Motor(4, true, COMMON_SPEED_MULTIPLER);
+	Right1 = Motor(5, false, COMMON_SPEED_MULTIPLER);
+	Right2 = Motor(6, true, COMMON_SPEED_MULTIPLER);
 }
 
 // Add the main program code into the continuous loop() function
 void loop()
 {
-	PS2.polling();
-	if (digitalRead(7) == HIGH)
+	for (auto motor : Motors)
 	{
-		Left1.SetSpeed(0.5);
+		if (digitalRead(7) == HIGH)
+		{
+			motor->SetSpeed(0.5);
+		}
+		else motor->Stop();
 	}
-	else Left1.Stop();
+
 	delay(50);
-	LogSerial("Joystick %d %d", PS2.LX, PS2.LY);
+	LogSerial("Joystick %d %d", PS2.Analog(PSS_LX), PS2.Analog(PSS_LY));
 }
