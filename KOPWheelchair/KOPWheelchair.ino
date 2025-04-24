@@ -37,23 +37,31 @@ void setup()
 	Serial.begin(115200);
 
 	// setup pins and settings: GamePad(clock, command, attention, data, Pressures?, Rumble?) check for error
-	auto error = PS2.config_gamepad(13, 11, 12, 10, true, true);
-	if (error != 0)
+	do
 	{
-		LogSerial("PS2 error %d, refusing to initialize", error);
-		delay(~0);
-	}
+		auto error = PS2.config_gamepad(13, 11, 12, 10, true, true);
+		if (error != 0)
+		{
+			LogSerial("PS2 error %d, refusing to initialize", error);
+			delay(100);
+		}
+		else
+		{
+			LogSerial("ps2 ok");
+			break;
+		}
+	} while (1);
 
-	Left1 = Motor(3, false, COMMON_SPEED_MULTIPLER);
-	Left2 = Motor(4, true, COMMON_SPEED_MULTIPLER);
-	Right1 = Motor(5, false, COMMON_SPEED_MULTIPLER);
-	Right2 = Motor(6, true, COMMON_SPEED_MULTIPLER);
+	Left1 = Motor(7, false, COMMON_SPEED_MULTIPLER);
+	Left2 = Motor(6, false, COMMON_SPEED_MULTIPLER);
+	Right1 = Motor(5, true, COMMON_SPEED_MULTIPLER);
+	Right2 = Motor(4, true, COMMON_SPEED_MULTIPLER);
 }
 
 // Add the main program code into the continuous loop() function
 void loop()
 {
-	PS2.read_gamepad();
+	/*PS2.read_gamepad();
 	for (auto motor : Motors)
 	{
 		if (digitalRead(7) == HIGH)
@@ -65,15 +73,17 @@ void loop()
 
 	delay(50);
 	LogSerial("Joystick %d %d", PS2.Analog(PSS_LX), PS2.Analog(PSS_LY));
-	return;
+	return;*/
 
 	delay(20);
 	PS2.read_gamepad();
 
-	auto controllerLeftX = (float)PS2.Analog(PSS_LX) / 127.5f - 1.0f;
-	auto controllerLeftY = (float)PS2.Analog(PSS_LY) / 127.5f - 1.0f;
-	auto controllerRightX = (float)PS2.Analog(PSS_RX) / 127.5f - 1.0f;
-	auto controllerRightY = (float)PS2.Analog(PSS_RY) / 127.5f - 1.0f;
+	auto controllerLeftX = -((float)PS2.Analog(PSS_LX) / 127.5f - 1.0f);
+	auto controllerLeftY = -((float)PS2.Analog(PSS_LY) / 127.5f - 1.0f);
+	auto controllerRightX = -((float)PS2.Analog(PSS_RX) / 127.5f - 1.0f);
+	auto controllerRightY = -((float)PS2.Analog(PSS_RY) / 127.5f - 1.0f);
+
+	//LogSerial("%d %d %d %d", (int)(controllerLeftX * 100.0f), (int)(controllerLeftY * 100.0f), (int)(controllerRightX * 100.0f), (int)(controllerRightY * 100.0f));
 
 	auto controllerPadUp = PS2.Button(PSB_PAD_UP);
 	auto controllerPadDown = PS2.Button(PSB_PAD_DOWN);
