@@ -2,8 +2,11 @@
 #include "Utility.h"
 #include "KOPWheelchair.h"
 #include "Motor.h"
+#include "Light.h"
 
 PS2X PS2;
+
+Light SignalLight;
 
 Motor Left1; // must construct in setup
 Motor Left2;
@@ -52,10 +55,12 @@ void setup()
 		}
 	} while (1);
 
-	Left1 = Motor(7, false, COMMON_SPEED_MULTIPLER);
-	Left2 = Motor(6, false, COMMON_SPEED_MULTIPLER);
-	Right1 = Motor(5, true, COMMON_SPEED_MULTIPLER);
-	Right2 = Motor(4, true, COMMON_SPEED_MULTIPLER);
+	Left1 = Motor(7, false, COMMON_SPEED_MULTIPLER * LEFT_SPEED_MULTIPLER);
+	Left2 = Motor(6, false, COMMON_SPEED_MULTIPLER * LEFT_SPEED_MULTIPLER);
+	Right1 = Motor(5, true, COMMON_SPEED_MULTIPLER * RIGHT_SPEED_MULTIPLER);
+	Right2 = Motor(4, true, COMMON_SPEED_MULTIPLER * RIGHT_SPEED_MULTIPLER);
+
+	SignalLight.Pin = 3;
 }
 
 // Add the main program code into the continuous loop() function
@@ -75,8 +80,12 @@ void loop()
 	LogSerial("Joystick %d %d", PS2.Analog(PSS_LX), PS2.Analog(PSS_LY));
 	return;*/
 
-	delay(20);
-	PS2.read_gamepad();
+	delay(10);
+
+	if (PS2.read_gamepad(false, 0) != true)
+		ControlMode = 0;
+
+	SignalLight.Update();
 
 	auto controllerLeftX = -((float)PS2.Analog(PSS_LX) / 127.5f - 1.0f);
 	auto controllerLeftY = -((float)PS2.Analog(PSS_LY) / 127.5f - 1.0f);
@@ -110,8 +119,13 @@ void loop()
 	{
 	case 0:
 		// default disabled mode
+		SetAllMotor(0);
+		SignalLight.OnMicroseconds = 100;
+		SignalLight.OffMicroseconds = 0;
 		break;
 	case 1:
+		SignalLight.OnMicroseconds = 200000;
+		SignalLight.OffMicroseconds = 200000;
 		if (controllerPadUp)
 		{
 			SetAllMotor(1);
@@ -137,6 +151,8 @@ void loop()
 		}
 		break;
 	case 2:
+		SignalLight.OnMicroseconds = 400000;
+		SignalLight.OffMicroseconds = 400000;
 		auto rotationDegreeScale = atan2(controllerLeftX, controllerLeftY) / 3.1415926f;
 		auto rotationDegreeScaleAbs = rotationDegreeScale < 0.0f ? 1.0f - rotationDegreeScale : rotationDegreeScale;
 
