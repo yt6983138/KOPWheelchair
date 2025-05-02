@@ -42,7 +42,7 @@ void setup()
 	// setup pins and settings: GamePad(clock, command, attention, data, Pressures?, Rumble?) check for error
 	do
 	{
-		auto error = PS2.config_gamepad(13, 11, 12, 10, true, true);
+		auto error = PS2.config_gamepad(13, 11, 12, 10, false, true);
 		if (error != 0)
 		{
 			LogSerial("PS2 error %d, refusing to initialize", error);
@@ -55,12 +55,12 @@ void setup()
 		}
 	} while (1);
 
-	Left1 = Motor(7, false, COMMON_SPEED_MULTIPLER * LEFT_SPEED_MULTIPLER);
-	Left2 = Motor(6, false, COMMON_SPEED_MULTIPLER * LEFT_SPEED_MULTIPLER);
-	Right1 = Motor(5, true, COMMON_SPEED_MULTIPLER * RIGHT_SPEED_MULTIPLER);
-	Right2 = Motor(4, true, COMMON_SPEED_MULTIPLER * RIGHT_SPEED_MULTIPLER);
+	Left1 = Motor(5, true, COMMON_SPEED_MULTIPLER * LEFT_SPEED_MULTIPLER);
+	Left2 = Motor(6, true, COMMON_SPEED_MULTIPLER * LEFT_SPEED_MULTIPLER);
+	Right1 = Motor(3, false, COMMON_SPEED_MULTIPLER * RIGHT_SPEED_MULTIPLER);
+	Right2 = Motor(4, false, COMMON_SPEED_MULTIPLER * RIGHT_SPEED_MULTIPLER);
 
-	SignalLight.Pin = 3;
+	SignalLight.Pin = 7;
 }
 
 // Add the main program code into the continuous loop() function

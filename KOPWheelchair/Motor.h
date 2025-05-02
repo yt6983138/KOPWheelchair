@@ -11,6 +11,7 @@
 #else
 #include "WProgram.h"
 #endif
+typedef float (*SpeedSmoothFunc)(float currentSpeed, float targetSpeed, uint64 elapsedMicros);
 
 struct Motor
 {
@@ -20,11 +21,13 @@ private:
 public:
 	float SpeedMultipler;
 	bool IsReversed;
+	SpeedSmoothFunc* SpeedSmoother;
 
-	Motor(uint8 pwmPin, bool isReversed, float speedMultipler = 1);
+	Motor(uint8 pwmPin, bool isReversed, float speedMultipler = 1, SpeedSmoothFunc* speedSmoother = NULL);
 	Motor();
 	~Motor();
 
+	void Update();
 	void SetSpeed(float speed);
 	void Stop();
 };
