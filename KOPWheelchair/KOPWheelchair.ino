@@ -3,10 +3,12 @@
 #include "KOPWheelchair.h"
 #include "Motor.h"
 #include "Light.h"
+#include "Buzzer.h"
 
 PS2X PS2;
 
 Light SignalLight;
+Buzzer SignalBuzzer;
 
 Motor Left1; // must construct in setup
 Motor Left2;
@@ -37,20 +39,20 @@ static void SetRightMotors(float speed)
 void setup()
 {
 	pinMode(7, INPUT);
-	Serial.begin(115200);
+	InitializeSerial();
 
 	// setup pins and settings: GamePad(clock, command, attention, data, Pressures?, Rumble?) check for error
 	do
 	{
-		auto error = PS2.config_gamepad(13, 11, 12, 10, false, true);
+		auto error = PS2.config_gamepad(10, 12, 11, 13, false, true);
 		if (error != 0)
 		{
-			LogSerial("PS2 error %d, refusing to initialize", error);
+			LogDebug("PS2 error %d, refusing to initialize", error);
 			delay(100);
 		}
 		else
 		{
-			LogSerial("ps2 ok");
+			LogDebug("PS2 ok");
 			break;
 		}
 	} while (1);
@@ -61,38 +63,27 @@ void setup()
 	Right2 = Motor(4, false, COMMON_SPEED_MULTIPLER * RIGHT_SPEED_MULTIPLER);
 
 	SignalLight.Pin = 7;
+	SignalBuzzer.Pin = 8;
 }
 
 // Add the main program code into the continuous loop() function
 void loop()
 {
-	/*PS2.read_gamepad();
-	for (auto motor : Motors)
-	{
-		if (digitalRead(7) == HIGH)
-		{
-			motor->SetSpeed(0.5);
-		}
-		else motor->Stop();
-	}
-
-	delay(50);
-	LogSerial("Joystick %d %d", PS2.Analog(PSS_LX), PS2.Analog(PSS_LY));
-	return;*/
-
 	delay(10);
 
 	if (PS2.read_gamepad(false, 0) != true)
 		ControlMode = 0;
 
 	SignalLight.Update();
+	for (auto motor : Motors)
+		motor->Update();
 
 	auto controllerLeftX = -((float)PS2.Analog(PSS_LX) / 127.5f - 1.0f);
 	auto controllerLeftY = -((float)PS2.Analog(PSS_LY) / 127.5f - 1.0f);
 	auto controllerRightX = -((float)PS2.Analog(PSS_RX) / 127.5f - 1.0f);
 	auto controllerRightY = -((float)PS2.Analog(PSS_RY) / 127.5f - 1.0f);
 
-	//LogSerial("%d %d %d %d", (int)(controllerLeftX * 100.0f), (int)(controllerLeftY * 100.0f), (int)(controllerRightX * 100.0f), (int)(controllerRightY * 100.0f));
+	LogDebug("%d %d %d %d", (int)(controllerLeftX * 100.0f), (int)(controllerLeftY * 100.0f), (int)(controllerRightX * 100.0f), (int)(controllerRightY * 100.0f));
 
 	auto controllerPadUp = PS2.Button(PSB_PAD_UP);
 	auto controllerPadDown = PS2.Button(PSB_PAD_DOWN);
@@ -120,7 +111,7 @@ void loop()
 	case 0:
 		// default disabled mode
 		SetAllMotor(0);
-		SignalLight.OnMicroseconds = 100;
+		SignalLight.OnMicroseconds = 1000000;
 		SignalLight.OffMicroseconds = 0;
 		break;
 	case 1:
@@ -153,11 +144,51 @@ void loop()
 	case 2:
 		SignalLight.OnMicroseconds = 400000;
 		SignalLight.OffMicroseconds = 400000;
-		auto rotationDegreeScale = atan2(controllerLeftX, controllerLeftY) / 3.1415926f;
-		auto rotationDegreeScaleAbs = rotationDegreeScale < 0.0f ? 1.0f - rotationDegreeScale : rotationDegreeScale;
 
-		auto leftSpeed = controllerLeftY * rotationDegreeScaleAbs;
-		auto rightSpeed = controllerLeftY * (1.0f - rotationDegreeScaleAbs);
+		// right: -, left: +, front: 0, back: +-1
+		auto rotationDegreeScale = atan2(controllerLeftX, controllerLeftY) / 3.1415926f;
+		auto rotationDegreeScaleAbs = fabs(rotationDegreeScale);
+		auto power = sqrt(controllerLeftX * controllerLeftX + controllerLeftY * controllerLeftY);
+		power = fmin(power, 1.0f);
+
+		Serial.println(rotationDegreeScale);
+
+		float leftWheelSpeed = 0;
+		float rightWheelSpeed = 0;
+
+		// left
+		if (rotationDegreeScale >= 0.0f)
+		{
+			if (rotationDegreeScale <= 0.5f)
+			{
+				leftWheelSpeed = power * (1.0f - 4.0f * rotationDegreeScale);
+				rightWheelSpeed = power;
+			}
+			// backward
+			else
+			{
+				leftWheelSpeed = -power;
+				rightWheelSpeed = power * (3.0f - 4.0f * rotationDegreeScale);
+			}
+		}
+		// right
+		else
+		{
+			if (rotationDegreeScale >= -0.5f)
+			{
+				leftWheelSpeed = power;
+				rightWheelSpeed = power * (1.0f + 4.0f * rotationDegreeScale);
+			}
+			// backward
+			else
+			{
+				leftWheelSpeed = power * (3.0f + 4.0f * rotationDegreeScale);
+				rightWheelSpeed = -power;
+			}
+		}
+
+		SetLeftMotors(leftWheelSpeed);
+		SetRightMotors(rightWheelSpeed);
 		break;
 	default:
 		break;

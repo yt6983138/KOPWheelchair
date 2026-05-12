@@ -17,7 +17,9 @@ struct Motor
 {
 private:
 	Servo PWMController;
-	int16 LastPWMPulseMicros;
+	uint64 LastPWMPulseMicros;
+	float CurrentSpeed;
+	float TargetSpeed;
 public:
 	float SpeedMultipler;
 	bool IsReversed;
@@ -29,6 +31,7 @@ public:
 
 	void Update();
 	void SetSpeed(float speed);
+	void SetSpeedForce(float speed);
 	void Stop();
 };
 

@@ -21,8 +21,18 @@ typedef unsigned long uint32;
 typedef long long int64;
 typedef unsigned long long uint64;
 
+uint8 MapZeroToOneToUInt8(float f);
 float FloatMap(float value, float srcLow, float srcHigh, float dstLow, float dstHigh);
 void LogSerial(const char* format, ...);
+void LogDebug(const char* format, ...);
+void InitializeSerial(bool debugOnly = true);
+
+constexpr bool DEBUG =
+#if _VMDEBUG
+true;
+#else
+false;
+#endif
 
 #endif
 
