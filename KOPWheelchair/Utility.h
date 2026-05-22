@@ -27,12 +27,7 @@ void LogSerial(const char* format, ...);
 void LogDebug(const char* format, ...);
 void InitializeSerial(bool debugOnly = true);
 
-constexpr bool DEBUG =
-#if _VMDEBUG
-true;
-#else
-false;
-#endif
+constexpr bool DEBUG = false;
 
 #endif
 

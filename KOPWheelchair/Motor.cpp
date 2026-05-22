@@ -6,7 +6,7 @@ static float DefaultSpeedSmoother(float currentSpeed, float targetSpeed, uint64 
 	return targetSpeed;
 }
 
-Motor::Motor(uint8 pwmPin, bool isReversed, float speedMultipler = 1, SpeedSmoothFunc* speedSmoother = NULL)
+Motor::Motor(uint8 pwmPin, bool isReversed, float speedMultipler = 1, SpeedSmoothFunc speedSmoother = NULL)
 {
 	IsReversed = isReversed;
 	SpeedMultipler = speedMultipler;

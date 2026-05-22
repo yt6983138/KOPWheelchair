@@ -39,16 +39,21 @@ static void SetRightMotors(float speed)
 void setup()
 {
 	pinMode(7, INPUT);
+	pinMode(8, OUTPUT);
 	InitializeSerial();
 
-	// setup pins and settings: GamePad(clock, command, attention, data, Pressures?, Rumble?) check for error
+	SignalLight.Pin = 7;
+	SignalBuzzer.Pin = 8;
+	
+	SignalBuzzer.OnVolume = 0.51f;
+
 	do
 	{
+		// setup pins and settings: GamePad(clock, command, attention, data, Pressures?, Rumble?) check for error
 		auto error = PS2.config_gamepad(10, 12, 11, 13, false, true);
 		if (error != 0)
 		{
 			LogDebug("PS2 error %d, refusing to initialize", error);
-			delay(100);
 		}
 		else
 		{
@@ -57,13 +62,12 @@ void setup()
 		}
 	} while (1);
 
+	SignalBuzzer.BeepFor(200);
+
 	Left1 = Motor(5, true, COMMON_SPEED_MULTIPLER * LEFT_SPEED_MULTIPLER);
 	Left2 = Motor(6, true, COMMON_SPEED_MULTIPLER * LEFT_SPEED_MULTIPLER);
 	Right1 = Motor(3, false, COMMON_SPEED_MULTIPLER * RIGHT_SPEED_MULTIPLER);
 	Right2 = Motor(4, false, COMMON_SPEED_MULTIPLER * RIGHT_SPEED_MULTIPLER);
-
-	SignalLight.Pin = 7;
-	SignalBuzzer.Pin = 8;
 }
 
 // Add the main program code into the continuous loop() function
@@ -75,6 +79,7 @@ void loop()
 		ControlMode = 0;
 
 	SignalLight.Update();
+	SignalBuzzer.Update();
 	for (auto motor : Motors)
 		motor->Update();
 
@@ -150,8 +155,6 @@ void loop()
 		auto rotationDegreeScaleAbs = fabs(rotationDegreeScale);
 		auto power = sqrt(controllerLeftX * controllerLeftX + controllerLeftY * controllerLeftY);
 		power = fmin(power, 1.0f);
-
-		Serial.println(rotationDegreeScale);
 
 		float leftWheelSpeed = 0;
 		float rightWheelSpeed = 0;

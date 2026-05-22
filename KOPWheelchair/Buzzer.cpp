@@ -8,3 +8,9 @@ void Buzzer::Update() const
 	auto value = nowCycleAt > this->OffMicroseconds ? MapZeroToOneToUInt8(this->OnVolume) : MapZeroToOneToUInt8(this->OffVolume);
 	analogWrite(this->Pin, value);
 }
+void Buzzer::BeepFor(int millis) const
+{
+	analogWrite(this->Pin, MapZeroToOneToUInt8(this->OnVolume));
+	delay(millis);
+	analogWrite(this->Pin, MapZeroToOneToUInt8(this->OffVolume));
+}

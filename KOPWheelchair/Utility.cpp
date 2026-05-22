@@ -39,6 +39,8 @@ void LogDebug(const char* format, ...)
 		vsnprintf(buffer, sizeof(buffer), format, args);
 		Serial.println(buffer);
 		memset(buffer, 0, sizeof(buffer));
+
+		va_end(args);
 	}
 }
 void InitializeSerial(bool debugOnly = true)

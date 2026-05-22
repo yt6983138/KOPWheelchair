@@ -12,4 +12,5 @@ public:
 	uint32 OffMicroseconds = 1;
 
 	void Update() const;
+	void BeepFor(int millis) const;
 };

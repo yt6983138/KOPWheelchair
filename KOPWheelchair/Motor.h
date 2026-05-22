@@ -23,9 +23,9 @@ private:
 public:
 	float SpeedMultipler;
 	bool IsReversed;
-	SpeedSmoothFunc* SpeedSmoother;
+	SpeedSmoothFunc SpeedSmoother;
 
-	Motor(uint8 pwmPin, bool isReversed, float speedMultipler = 1, SpeedSmoothFunc* speedSmoother = NULL);
+	Motor(uint8 pwmPin, bool isReversed, float speedMultipler = 1, SpeedSmoothFunc speedSmoother = NULL);
 	Motor();
 	~Motor();
 
